@@ -42,6 +42,16 @@ Both routes reach the worker and end at the same exit. Make hazards readable bef
 
 Milestones 1–3 are the first playable. Milestone 4 adds the full creator experience once the manual workflow and art pipelines are proven. If analysis uses a remote service, ask before sending an image and save the resulting design choices locally. Keep reference images out of the game save.
 
+## Combat balance for one starter
+
+With one monster per side, a bad matchup has no bench to fall back on. The first combat test should check whether a player who falls behind still has a meaningful decision on the next turn.
+
+- Separate visual parts from combat stats. Body proportions, tail choice, and move animations share the same combat rules. Give both prototype bodies the same baseline stat budget.
+- Give every starter a basic attack and Guard, plus one signature move. Start with Splash as a conditional interrupt and Climb as a repositioning move if the arena supports it. Telegraph interruptible attacks. Set a cooldown on interrupts and prevent repeated turn denial.
+- Keep player backgrounds and temperament effects out of the first balance comparison. Test their combat effects individually once the baseline matchup works.
+- Test both prototype loadouts against each other and themselves. Swap who acts first and which side each loadout starts on. Record win rate by matchup and starting order, turns to finish, turns denied, and whether the losing side had a viable response. Use simulations for repeatable comparisons and human playtests for readability and counterplay.
+- If PvP moves into scope, start with a separate ruleset that normalizes levels and gives both players access to the same legal loadouts. Keep story growth and evolution bonuses in the campaign until there is a tested competitive equivalent. Online play stays outside the first playable.
+
 ## Scope and decisions to revisit
 
 - Start with HD 2D sprites and environments. Use one animation set per base body and attachment layers for swappable parts. Draw dedicated poses for actions where the silhouette matters.
