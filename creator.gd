@@ -1,5 +1,6 @@
 extends Control
 
+const Battle = preload("res://battle.gd")
 const SAVE_PATH := "user://duo.json"
 const FIELDS := {
 	"Character": {
@@ -18,6 +19,7 @@ const FIELDS := {
 
 var design: Dictionary = {}
 var selected := "Character"
+var editor: MarginContainer
 var rows: VBoxContainer
 var preview: Control
 var status: Label
@@ -27,14 +29,14 @@ var demo_until := 0.0
 
 func _ready() -> void:
 	design = read_design()
-	var margin := MarginContainer.new()
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	editor = MarginContainer.new()
+	editor.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 24)
-	add_child(margin)
+		editor.add_theme_constant_override("margin_" + side, 24)
+	add_child(editor)
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 12)
-	margin.add_child(column)
+	editor.add_child(column)
 	var title := Label.new()
 	title.text = "Wildmade"
 	title.add_theme_font_size_override("font_size", 34)
@@ -53,11 +55,23 @@ func _ready() -> void:
 	rows.add_theme_constant_override("separation", 8)
 	column.add_child(rows)
 	column.add_child(make_button("Save duo", save_design))
+	column.add_child(make_button("Test fight", open_battle))
 	status = Label.new()
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	status.text = "Saved duo loaded." if FileAccess.file_exists(SAVE_PATH) else "Create your duo."
 	column.add_child(status)
 	select_category(selected)
+
+
+func open_battle() -> void:
+	var battle := Battle.new()
+	battle.signature = design["Starter"]["Move"]
+	add_child(battle)
+	editor.hide()
+	battle.finished.connect(func():
+		battle.queue_free()
+		editor.show()
+	)
 
 
 func make_button(caption: String, action: Callable) -> Button:
