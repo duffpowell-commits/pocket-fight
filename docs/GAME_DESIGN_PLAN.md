@@ -1,8 +1,8 @@
-# Pocket Fight — Game brief and first playable
+# Wildmade — Game brief and first playable
 
 ## The pitch
 
-Design yourself and hatch a monster you made. Then see what the two of you can do together. Pocket Fight is a single-player HD 2D RPG with hand-drawn sprites, a fixed three-quarter camera, and encounters with more than one solution.
+Design yourself and hatch a monster you made. Then see what the two of you can do together. Wildmade is a single-player HD 2D RPG with hand-drawn sprites, a fixed three-quarter camera, and encounters with more than one solution.
 
 **Core loop:** Create your duo → explore → use both characters’ abilities to solve an encounter → grow together. Later, what you do together can unlock evolution options. The player chooses whether and how the starter evolves.
 
