@@ -43,7 +43,9 @@ static func mix(a: Dictionary, b: Dictionary, t: float) -> Dictionary:
 class Creature extends Control:
 	const INK := Color("1b2028")
 	var p: Dictionary
-	var style := "ink"                 # ink | soft
+	var style := "ink"                 # ink | soft | cel
+	var edge := 0.0                    # 0 = cub (cute), 0.5 = rookie, 1 = champion (fierce)
+	var disc := true                   # backdrop circle (off when the sprite goes into a 3D world)
 	var _q: Array = []
 
 	func _tap(a: Vector2, ra: float, b: Vector2, rb: float, col: Color) -> void:
@@ -73,6 +75,14 @@ class Creature extends Control:
 				_fill(s[0], s[1] + 3.2, s[2], s[3] + 3.2, INK)
 			for s in _q:
 				_fill(s[0], s[1], s[2], s[3], s[4])
+		elif style == "cel":   # anime cel: ink line, one hard shadow tone on the lower right
+			for s in _q:
+				_fill(s[0], s[1] + 3.2, s[2], s[3] + 3.2, INK)
+			for s in _q:
+				_fill(s[0], s[1], s[2], s[3], (s[4] as Color).darkened(0.24).lerp(Color("3a3f7a"), 0.12))
+			for s in _q:
+				var o := Vector2(-0.1, -0.16)
+				_fill(s[0] + o * s[1], s[1] * 0.86, s[2] + o * s[3], s[3] * 0.86, s[4])
 		else:   # soft clay: a darker under-layer, the colour shifted up-left, a pale rim light
 			for s in _q:
 				_fill(s[0], s[1], s[2], s[3], (s[4] as Color).darkened(0.32))
@@ -85,12 +95,24 @@ class Creature extends Control:
 	func _draw() -> void:
 		var k := minf(size.x, size.y) / 250.0
 		var ground := Vector2(size.x * 0.5, size.y * 0.84)
+		if disc:
+			draw_set_transform(ground, 0.0, Vector2(k, k))
+			draw_circle(Vector2(0, -64), 112.0, Color("223040"))
+			draw_set_transform(ground, 0.0, Vector2(k, k * 0.2))
+			draw_circle(Vector2(0, 10), 100.0, Color("2c3e52"))
+			draw_circle(Vector2(0, 6), float(p["len"]) * 0.5 + 34.0, Color(0, 0, 0, 0.35))
 		draw_set_transform(ground, 0.0, Vector2(k, k))
-		draw_circle(Vector2(0, -64), 112.0, Color("223040"))
-		draw_set_transform(ground, 0.0, Vector2(k, k * 0.2))
-		draw_circle(Vector2(0, 10), 100.0, Color("2c3e52"))
-		draw_circle(Vector2(0, 6), float(p["len"]) * 0.5 + 34.0, Color(0, 0, 0, 0.35))
-		draw_set_transform(ground, 0.0, Vector2(k, k))
+		# Stage: one slider reshapes the same animal from cub to champion.
+		p = p.duplicate()
+		p["head"] = float(p["head"]) * lerpf(1.22, 0.9, edge)
+		p["eye"] = float(p["eye"]) * lerpf(1.35, 0.95, edge)
+		p["leg"] = float(p["leg"]) * lerpf(0.7, 1.15, edge)
+		p["len"] = float(p["len"]) * lerpf(0.78, 1.12, edge)
+		p["snout"] = float(p["snout"]) * lerpf(0.6, 1.15, edge)
+		p["neck"] = float(p["neck"]) * lerpf(0.5, 1.3, edge)
+		p["horn"] = maxf(float(p["horn"]) * lerpf(0.3, 1.2, edge), edge * 0.9 - 0.45)
+		p["spikes"] = maxf(float(p["spikes"]) * lerpf(0.3, 1.2, edge), edge * 0.8 - 0.4)
+		p["tail"] = float(p["tail"]) * lerpf(0.7, 1.1, edge)
 
 		var col: Color = p["col"]
 		var acc: Color = p["acc"]
@@ -150,6 +172,10 @@ class Creature extends Control:
 			_tap(top, lw * 0.85, knee, lw * 0.6, dark)
 			_tap(knee, lw * 0.6, foot, lw * 0.5, dark)
 			_tap(foot, lw * 0.5, foot + Vector2(lw * 0.6, 0.5), lw * 0.45, dark)
+		# champion gear: a shoulder plate in the second colour
+		if edge > 0.7:
+			var sh := chest + Vector2(-cr * 0.25, -cr * 0.35)
+			_tap(sh, cr * 0.5, sh + Vector2(-cr * 0.35, cr * 0.1), cr * 0.34, acc)
 		# ears
 		var el: float = p["ear"]
 		if el > 3.0:
@@ -173,6 +199,20 @@ class Creature extends Control:
 			_tap(head + sdir * hd * 0.35, hd * 0.6, tip2, float(p["snout_w"]) * 0.6, col.lightened(0.12))
 		_flush()
 
+		# flank marks grow with the stage
+		if edge > 0.3:
+			for i in 3:
+				var at3 := hip.lerp(chest, 0.2 + 0.25 * i)
+				var r3 := lerpf(hr, cr, 0.2 + 0.25 * i)
+				var up3 := Vector2(0, -1).rotated(-tilt)
+				draw_colored_polygon(PackedVector2Array([at3 + up3 * r3 * 0.88 + Vector2(-5, 0), at3 + up3 * r3 * 0.88 + Vector2(5, 0),
+					at3 + up3 * r3 * (0.9 - 0.7 * edge) + Vector2(2, 0)]), dark.darkened(0.2))
+		# claws
+		if edge > 0.45:
+			for fx in [hip.x - 4.0, chest.x - 3.0]:
+				for i in 3:
+					var c0x: float = float(fx) + lw * 0.2 + i * lw * 0.35
+					draw_colored_polygon(PackedVector2Array([Vector2(c0x, -4), Vector2(c0x + lw * 0.3, -4), Vector2(c0x + lw * 0.45, 2.5)]), Color("f4efe2"))
 		# belly: one lighter underside from hip to chin, so every mix reads as one animal
 		var bl: float = p["belly"]
 		if bl > 0.1:
@@ -193,10 +233,26 @@ class Creature extends Control:
 		# face
 		var er: float = p["eye"]
 		var eye := head + Vector2(hd * 0.3, -hd * 0.15)
-		draw_circle(eye, er + 1.6, INK)
-		draw_circle(eye, er, Color.WHITE)
-		draw_circle(eye + Vector2(er * 0.2, er * 0.05), er * 0.6, INK)
-		draw_circle(eye + Vector2(-er * 0.05, -er * 0.25), er * 0.22, Color.WHITE)
+		if edge < 0.4:      # cub: big round shiny eye
+			draw_circle(eye, er + 1.6, INK)
+			draw_circle(eye, er, Color.WHITE)
+			draw_circle(eye + Vector2(er * 0.15, er * 0.08), er * 0.72, INK)
+			draw_circle(eye + Vector2(-er * 0.15, -er * 0.3), er * 0.3, Color.WHITE)
+			draw_circle(eye + Vector2(er * 0.35, er * 0.3), er * 0.14, Color.WHITE)
+		else:               # sharper: slanted lid, coloured iris, slit pupil
+			var slant := (edge - 0.4) * 1.1
+			var pts := PackedVector2Array([eye + Vector2(-er * 1.3, -er * (0.2 + slant)), eye + Vector2(er * 1.25, -er * (0.85 - slant * 0.6)),
+				eye + Vector2(er * 1.1, er * 0.6), eye + Vector2(-er * 0.9, er * 0.75)])
+			var rim := PackedVector2Array()
+			for q in pts:
+				rim.append(eye + (q - eye) * 1.22)
+			draw_colored_polygon(rim, INK)
+			draw_colored_polygon(pts, Color.WHITE)
+			var iris: Color = acc if acc.get_luminance() < 0.75 else Color("e0a020")
+			draw_circle(eye + Vector2(er * 0.15, er * 0.1), er * 0.55, iris)
+			draw_line(eye + Vector2(er * 0.15, -er * 0.4), eye + Vector2(er * 0.15, er * 0.6), INK, maxf(1.6, er * 0.3))
+			draw_circle(eye + Vector2(-er * 0.2, -er * 0.15), er * 0.18, Color.WHITE)
+			draw_line(eye + Vector2(-er * 1.5, -er * (0.35 + slant)), eye + Vector2(er * 1.45, -er * (1.0 - slant * 0.6)), INK, 2.6)
 		if float(p["beak"]) < 0.5:
 			draw_circle(tip2 + Vector2(-1, -float(p["snout_w"]) * 0.25), 3.2, INK)
 			var m0 := head + sdir * hd * 0.5 + Vector2(0, hd * 0.42)
@@ -277,4 +333,163 @@ func _initialize() -> void:
 				var c2 := Creature.new()
 				c2.p = mix(SPECIES[m[0]], SPECIES[m[1]], t)
 				_cell(grid, c2, "%s %d%% + %s %d%%" % [m[0], int(100 - t * 100), m[1], int(t * 100)], cell), dir + "blends2.png")
+	# Sheet 3: one animal, three stages (the same numbers pushed from cute to fierce), cel shaded.
+	await _sheet(3, 180, func(grid: GridContainer, cell: int):
+		for name in ["Fox", "Drake", "Owl"]:
+			for st in [[0.0, "cub"], [0.5, "rookie"], [1.0, "champion"]]:
+				var c := Creature.new()
+				c.p = SPECIES[name]
+				c.style = "cel"
+				c.edge = st[0]
+				_cell(grid, c, "%s: %s" % [name, st[1]], cell)
+		for st in [[0.0, "cub"], [0.5, "rookie"], [1.0, "champion"]]:
+			var c2 := Creature.new()
+			c2.p = mix(SPECIES["Fox"], SPECIES["Drake"], 0.5)
+			c2.style = "cel"
+			c2.edge = st[0]
+			_cell(grid, c2, "Fox+Drake: %s" % st[1], cell), dir + "stages.png")
+	await _world(dir + "world.png")
 	quit()
+
+
+## Sheet 4: the HD-2D look. Flat drawn monsters standing in a small lit 3D place, with soft
+## focus at the top and bottom of the screen. One real engine render, no pipeline yet.
+func _world(out: String) -> void:
+	for c in root.get_children():
+		c.queue_free()
+	await process_frame
+	var world := Node3D.new()
+	root.add_child(world)
+	var env := Environment.new()
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color("9fd3e6")
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color("b9c8e8")
+	env.ambient_light_energy = 0.55
+	env.fog_enabled = true
+	env.fog_light_color = Color("bfe3ee")
+	env.fog_density = 0.0035
+	env.glow_enabled = true
+	env.glow_intensity = 0.25
+	env.glow_bloom = 0.03
+	var we := WorldEnvironment.new()
+	we.environment = env
+	world.add_child(we)
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-48, -35, 0)
+	sun.light_color = Color("fff0d0")
+	sun.light_energy = 1.25
+	sun.shadow_enabled = true
+	world.add_child(sun)
+	var cam := Camera3D.new()
+	cam.fov = 34.0
+	cam.position = Vector3(0, 12.5, 20.0)
+	world.add_child(cam)
+	cam.look_at(Vector3(0, 0.6, -0.5))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 11
+	var solid := func(mesh: Mesh, col: Color, pos: Vector3, scl: Vector3 = Vector3.ONE, rough: float = 1.0) -> MeshInstance3D:
+		var m := MeshInstance3D.new()
+		m.mesh = mesh
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = col
+		mat.roughness = rough
+		m.material_override = mat
+		m.position = pos
+		m.scale = scl
+		world.add_child(m)
+		return m
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(60, 60)
+	solid.call(plane, Color("6fb24e"), Vector3.ZERO)
+	# lighter and darker grass patches, a dirt path, a pond
+	var disc := CylinderMesh.new()
+	disc.height = 0.02
+	for i in 26:
+		var r := rng.randf_range(0.8, 2.6)
+		solid.call(disc, Color("7fc257") if i % 2 == 0 else Color("5fa044"), Vector3(rng.randf_range(-11, 11), 0.01 + i * 0.0004, rng.randf_range(-12, 5)), Vector3(r, 1, r * rng.randf_range(0.5, 1.0)))
+	for i in 9:
+		solid.call(disc, Color("c9a873"), Vector3(-6.0 + i * 1.5, 0.03, 2.2 + sin(i * 0.9) * 0.8), Vector3(1.5, 1, 0.9))
+	solid.call(disc, Color("4aa6d8"), Vector3(4.6, 0.04, -3.2), Vector3(3.4, 1, 2.2), 0.1)
+	solid.call(disc, Color("8fd0ee"), Vector3(4.3, 0.05, -3.4), Vector3(2.2, 1, 1.2), 0.1)
+	# low hills behind
+	var ball := SphereMesh.new()
+	for i in 7:
+		solid.call(ball, Color("5d9c47").lerp(Color("9fd3e6"), 0.25), Vector3(-15 + i * 5, -1.5, -14 - (i % 2) * 3), Vector3(9, 5 + (i % 3), 6))
+	# trees: trunk + three stacked cones; rocks; flowers
+	var cone := CylinderMesh.new()
+	cone.top_radius = 0.0
+	var trunk := CylinderMesh.new()
+	for t in [Vector3(-5.2, 0, -4.5), Vector3(-7.4, 0, -1.5), Vector3(-3.0, 0, -7.5), Vector3(7.6, 0, -6.5), Vector3(1.2, 0, -8.5), Vector3(8.6, 0, 0.5), Vector3(-9.0, 0, -8.0), Vector3(5.2, 0, -10.0)]:
+		var h := rng.randf_range(0.85, 1.3)
+		solid.call(trunk, Color("7a5236"), t + Vector3(0, 0.5 * h, 0), Vector3(0.45, 0.5 * h, 0.45))
+		for j in 3:
+			solid.call(cone, Color("2f7d4a").lightened(0.07 * j), t + Vector3(0, (1.5 + j * 0.85) * h, 0), Vector3((2.4 - j * 0.6) * h, 0.8 * h, (2.4 - j * 0.6) * h))
+	for i in 9:
+		var s := rng.randf_range(0.3, 0.9)
+		solid.call(ball, Color("8a8f9c"), Vector3(rng.randf_range(-9, 9), s * 0.25, rng.randf_range(-9, 4)), Vector3(s * 1.4, s, s * 1.1))
+	for i in 40:
+		solid.call(ball, [Color("fff2a8"), Color("f7a8c4"), Color("ffffff")][i % 3], Vector3(rng.randf_range(-9, 9), 0.12, rng.randf_range(-7, 5.5)), Vector3(0.16, 0.16, 0.16))
+	# the monsters: each drawn into its own small viewport, then stood up as a flat card
+	var cast := [["Fox", 0.5, Vector3(-2.0, 0, 1.6), 2.4, false], ["Drake", 1.0, Vector3(1.9, 0, -0.4), 3.4, true],
+		["Owl", 0.0, Vector3(0.2, 0, 3.6), 1.6, false], ["Bear", 0.5, Vector3(-3.6, 0, -2.6), 3.0, false],
+		["mix", 0.5, Vector3(3.2, 0, 3.0), 2.4, true]]
+	for c in cast:
+		var vp := SubViewport.new()
+		vp.size = Vector2i(512, 512)
+		vp.transparent_bg = true
+		vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+		root.add_child(vp)
+		var cr := Creature.new()
+		cr.p = mix(SPECIES["Fox"], SPECIES["Drake"], 0.5) if c[0] == "mix" else SPECIES[c[0]]
+		cr.style = "cel"
+		cr.edge = c[1]
+		cr.disc = false
+		cr.size = Vector2(512, 512)
+		vp.add_child(cr)
+		var card := Sprite3D.new()
+		card.texture = vp.get_texture()
+		card.pixel_size = float(c[3]) / 512.0
+		card.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		card.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+		card.shaded = false
+		card.flip_h = c[4]
+		card.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+		card.position = (c[2] as Vector3) + Vector3(0, float(c[3]) * 0.34, 0)
+		world.add_child(card)
+		# soft blob shadow on the grass
+		var sh := MeshInstance3D.new()
+		sh.mesh = disc
+		var sm := StandardMaterial3D.new()
+		sm.albedo_color = Color(0.05, 0.12, 0.08, 0.38)
+		sm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		sm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		sh.material_override = sm
+		sh.position = (c[2] as Vector3) + Vector3(0, 0.06, 0)
+		sh.scale = Vector3(float(c[3]) * 0.52, 1, float(c[3]) * 0.2)
+		world.add_child(sh)
+	# tilt-shift: sharp across the middle, soft at the top and bottom, plus a light vignette
+	var layer := CanvasLayer.new()
+	root.add_child(layer)
+	var rect := ColorRect.new()
+	rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var sm2 := ShaderMaterial.new()
+	var sh2 := Shader.new()
+	sh2.code = """shader_type canvas_item;
+uniform sampler2D screen : hint_screen_texture, filter_linear_mipmap;
+void fragment() {
+	float d = smoothstep(0.2, 0.5, abs(SCREEN_UV.y - 0.55));
+	vec3 c = textureLod(screen, SCREEN_UV, d * 2.4).rgb;
+	vec2 v = SCREEN_UV - vec2(0.5);
+	c *= 1.0 - dot(v, v) * 0.45;
+	c = mix(c, c * vec3(1.06, 1.0, 0.92), 0.5);
+	COLOR = vec4(c, 1.0);
+}"""
+	sm2.shader = sh2
+	rect.material = sm2
+	layer.add_child(rect)
+	for i in 12:
+		await process_frame
+	await RenderingServer.frame_post_draw
+	root.get_texture().get_image().save_png(out)
+	print("SAVED " + out)
