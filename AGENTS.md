@@ -16,8 +16,8 @@ This turns on `.githooks/pre-push` for every agent, not just Claude Code (detail
 Why: Claude Code hooks only fire inside Claude Code, so Grok and other agents could skip them.
 
 ## Commands
-- Engine: Godot 4.6.3-stable. Version lives in `GODOT_VERSION` (build.yml) + `config/features`.
-- Godot in a cloud sandbox: 4.6.3-stable Linux zip from GitHub releases -> `/usr/local/bin/godot`.
+- Engine: Godot 4.7.2-stable. Version lives in `GODOT_VERSION` (build.yml) + `config/features`.
+- Godot in a cloud sandbox: 4.7.2-stable Linux zip from GitHub releases -> `/usr/local/bin/godot`.
   Fresh clone: `godot --headless --path . --import`.
 - Tests: `tools/test.sh` -> `TESTS PASS` (runs `test_cmd` from `.claude/hooks/guard.cfg`: parse
   check `tools/check_scripts.gd` + rule tests `tests/run_tests.gd` -> `ALL PASS`; records the

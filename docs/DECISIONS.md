@@ -24,3 +24,7 @@
 - **Fight number changed:** heavy strike 12 -> 15. At 12, tapping Attack every turn always won, so
   Guard and the signature move never mattered. A test now holds both ends: attack-only loses, smart play wins.
 - **Open:** KEYSTONE_PASS secret; who the second tester is; whether photo input is worth paying for.
+
+## 2026-11-24: Godot 4.7.2 for every game
+
+- Duff: "Lets go 4.7 for all of our games." 4.7.2 is the latest stable; 4.7 adds a stable Godot Android Build Environment (GABE) for exporting from the phone, HDR output and AreaLight3D. CI `GODOT_VERSION`, `config/features` and the engine lines in AGENTS.md / standards moved from 4.6.3 to 4.7.2. Older entries below keep their original version numbers as history.

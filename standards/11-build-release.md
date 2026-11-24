@@ -28,7 +28,7 @@ create key -> repo Settings -> Secrets -> Actions). Free Buffer = 3 channels, 10
 The clip link must be public (public repos). `tools/test_buffer_drafts.py` proves drafts-only.
 
 ## Engine version
-Godot 4.6.3 (`GODOT_VERSION` in `.github/workflows/build.yml`, `config/features` in
+Godot 4.7.2 (`GODOT_VERSION` in `.github/workflows/build.yml`, `config/features` in
 `project.godot`). Move up only to a stable release, and only once every check passes on it.
 After an engine upgrade, delete `.godot/imported/` (or Project -> Reimport): a cache from the old
 version left the mannequin's mesh unlinked from its skeleton (T-pose). `Character3D` re-links it
