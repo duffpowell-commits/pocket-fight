@@ -1,0 +1,58 @@
+name: foxboard-decode
+
+# Foxboard (Duff's phone art editor, repo duffpowell-commits/Foxboard) sends art through the
+# GitHub connector, which can only write text. So it commits art into grok_art/ as base64
+# (`<name>-<time>.png.b64` / `.gif.b64`). This job turns each one back into the real image and
+# removes the .b64. Its own push uses GITHUB_TOKEN, which never triggers other workflows, and
+# build.yml ignores grok_art/ anyway (art drops never ship by themselves).
+on:
+  push:
+    branches: [main]
+    paths: ["grok_art/**/*.b64"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: foxboard-decode
+  cancel-in-progress: false
+
+jobs:
+  decode:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: grok_art
+      - name: Decode base64 art drops
+        run: |
+          set -euo pipefail
+          found=0
+          while IFS= read -r -d '' f; do
+            out="${f%.b64}"
+            if ! tr -d '\r\n ' < "$f" | base64 -d > "$out" 2>/dev/null; then
+              echo "::warning::not valid base64, left as is: $f"; rm -f "$out"; continue
+            fi
+            sig=$(head -c 4 "$out" | od -An -tx1 | tr -d ' \n')
+            case "$sig" in
+              89504e47|47494638) ;;   # PNG, GIF
+              *) echo "::warning::not a PNG/GIF, left as is: $f"; rm -f "$out"; continue ;;
+            esac
+            git rm -q "$f"
+            git add "$out"
+            echo "decoded $out"
+            found=1
+          done < <(find grok_art -name '*.b64' -print0)
+          if [ "$found" = 1 ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -q -m "Foxboard: decode art drop"
+            for i in 1 2 3; do
+              if git pull -q --rebase origin main && git push -q origin HEAD:main; then exit 0; fi
+              sleep $((i * 5))
+            done
+            echo "::error::could not push the decoded art"; exit 1
+          fi

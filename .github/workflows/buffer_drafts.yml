@@ -1,0 +1,38 @@
+name: send clip to Buffer drafts
+
+# One tap from the phone: github.com -> this repo -> Actions -> "send clip to Buffer drafts" -> Run.
+# Takes the latest 15 s vertical gameplay clip from the dev release and leaves one DRAFT per video
+# channel in Buffer (TikTok, Shorts, Instagram, X, Bluesky...). Nothing is published or queued to go
+# live: Duff schedules or deletes each draft in the Buffer app. Needs the BUFFER_API_KEY repo secret.
+# The clip link must be public, so this works for public repos (private repo releases need sign-in).
+on:
+  workflow_dispatch:
+    inputs:
+      caption:
+        description: "Post text (blank = game name + tags)"
+        required: false
+      channels:
+        description: "Services to draft to, comma list (Duff picked TikTok, Shorts, Instagram)"
+        required: false
+        default: "tiktok,youtube,instagram"
+
+jobs:
+  drafts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Drafts only (tested)
+        run: python3 tools/test_buffer_drafts.py
+      - name: Send the clip to Buffer as drafts
+        env:
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+          BUFFER_CHANNELS: ${{ inputs.channels }}
+          CAPTION_IN: ${{ inputs.caption }}
+        run: |
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          TITLE=$(sed -n 's/^config\/name="\(.*\)"/\1/p' project.godot)
+          export VIDEO_URL="https://github.com/$GITHUB_REPOSITORY/releases/download/dev/${REPO_NAME}_gameplay.mp4"
+          export CAPTION="${CAPTION_IN:-$TITLE: new build. #indiegame #gamedev #godot}"
+          curl -sfIL "$VIDEO_URL" >/dev/null || { echo "No public clip at $VIDEO_URL (private repo, or no build on main yet)"; exit 1; }
+          python3 tools/buffer_drafts.py

@@ -1,0 +1,22 @@
+# Post brief: <content_id>
+
+- Game:
+- Verified build / footage source URL:
+- Feature shown (shipped vs concept):
+- Platform / verified studio handle:
+- Target audience:
+- Opening hook (first 2 seconds):
+- Video storyboard (15–35 seconds):
+- Audio source and usage rights:
+- Captions / accessibility:
+- End card: 3 Eyed Fox Studios + game title
+- CTA + verified URL:
+- Final asset path and SHA-256:
+- Caption / hashtags:
+- Proposed local publish time (America/Chicago):
+- Owner approval (who, when, exact version):
+- Scheduler confirmation / post ID:
+- Published URL:
+- QA (audio, no false claims, privacy, approved visuals):
+- Metrics at 24h / 7d:
+- Status: draft
