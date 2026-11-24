@@ -407,6 +407,22 @@ func test_monster_from_text() -> void:
 				check(Monster.PARTS.has(k) and Monster.WORDS[w][k] in Monster.PARTS[k], "word '%s' sets a real part (%s)" % [w, k])
 
 
+## Animals get their own face: a wolf has a snout, a dragon a long one, a cat a flat face.
+func test_monster_snouts() -> void:
+	check(Monster.PARTS.has("snout") and Monster.PARTS["snout"][0] == "Flat", "snout is a part; flat is the default")
+	if not Monster.PARTS.has("snout"):
+		return
+	check(Monster.from_text("black wolf")["design"]["snout"] == "Snout", "wolf has a snout")
+	check(Monster.from_text("red dragon")["design"]["snout"] == "Long", "dragon has a long snout")
+	check(Monster.from_text("fat bear")["design"]["snout"] == "Muzzle", "bear has a muzzle")
+	var wolf: Dictionary = Monster.from_text("wolf")["design"]
+	check(Monster.from_text("cat", wolf)["design"]["snout"] == "Flat", "changing a wolf into a cat flattens the face")
+	check(Monster.from_text("cat with a long snout")["design"]["snout"] == "Long", "an asked-for snout beats the animal's")
+	var old: Dictionary = Monster.fresh()
+	old.erase("snout")
+	check(Monster.clean(old)["snout"] == "Flat", "a save from before snouts loads with a flat face")
+
+
 ## The test fight's rules (carried over from the prototype's own check).
 func test_duel_rules() -> void:
 	var s := Duel.new("Splash")

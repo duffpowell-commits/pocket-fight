@@ -240,6 +240,11 @@ func _draw() -> void:
 	# --- behind the head: ears, mane
 	var e1 := hc + Vector2(-hr * 0.55, -hr * 0.62).rotated(tilt)
 	var e2 := hc + Vector2(hr * 0.35, -hr * 0.78).rotated(tilt)
+	if d["top"] == "Horns":              # horns take the crown; ears move down to the sides
+		e1 += Vector2(-hr * 0.3, hr * 0.38).rotated(tilt)
+		e2 += Vector2(hr * 0.42, hr * 0.5).rotated(tilt)
+	var crown1 := hc + Vector2(-hr * 0.43, -hr * 0.52).rotated(tilt)
+	var crown2 := hc + Vector2(hr * 0.25, -hr * 0.66).rotated(tilt)
 	match d["ears"]:
 		"Pointy":
 			for e in [e1, e2]:
@@ -259,7 +264,7 @@ func _draw() -> void:
 			_poly(PackedVector2Array([hc + Vector2(-hr * 0.75, -hr * 0.3), hc + Vector2(-hr * 0.55, -hr * 1.5),
 				hc + Vector2(hr * 0.35, -hr * 0.8)]), acc)
 	if d["top"] == "Horns":
-		for e in [e1 + Vector2(hr * 0.12, hr * 0.1), e2 + Vector2(-hr * 0.1, hr * 0.12)]:
+		for e in [crown1, crown2]:
 			_poly(PackedVector2Array([e + Vector2(-hr * 0.2, hr * 0.25), e + Vector2(-hr * 0.42, -hr * 0.45),
 				e + Vector2(-hr * 0.12, -hr * 0.82), e + Vector2(hr * 0.2, hr * 0.25)]), Color("efe6cf"))
 	if d["top"] == "Mane":
@@ -274,6 +279,19 @@ func _draw() -> void:
 			_ell(tipa, 6.5, 6.5, acc)
 	# --- head
 	_ell(hc, hr, hr * 0.94, lite, tilt)
+	# the snout shares the head's outline; a beak replaces it
+	var snout: String = d["snout"] if d["mouth"] != "Beak" else "Flat"
+	var nose := Vector2.ZERO
+	match snout:
+		"Snout":
+			_ell(hc + Vector2(hr * 0.74, hr * 0.3).rotated(tilt), hr * 0.5, hr * 0.33, lite, tilt + 0.08)
+			nose = hc + Vector2(hr * 1.16, hr * 0.17).rotated(tilt)
+		"Muzzle":
+			_ell(hc + Vector2(hr * 0.52, hr * 0.4).rotated(tilt), hr * 0.46, hr * 0.37, lite.lightened(0.25), tilt)
+			nose = hc + Vector2(hr * 0.74, hr * 0.2).rotated(tilt)
+		"Long":
+			_ell(hc + Vector2(hr * 0.98, hr * 0.26).rotated(tilt), hr * 0.82, hr * 0.31, lite, tilt + 0.05)
+			nose = hc + Vector2(hr * 1.62, hr * 0.12).rotated(tilt)
 	if d["mouth"] == "Beak":
 		var bk := hc + Vector2(hr * 0.78, hr * 0.2).rotated(tilt)
 		_poly(PackedVector2Array([bk + Vector2(-hr * 0.2, -hr * 0.3), bk + Vector2(hr * 0.62, hr * 0.02),
@@ -347,6 +365,18 @@ func _draw() -> void:
 	# mouth
 	var mc := hc + Vector2(hr * 0.42, hr * 0.46).rotated(tilt)
 	var mw := hr * 0.3
+	match snout:
+		"Snout":
+			mc = hc + Vector2(hr * 0.84, hr * 0.44).rotated(tilt)
+			mw = hr * 0.24
+		"Muzzle":
+			mc = hc + Vector2(hr * 0.56, hr * 0.56).rotated(tilt)
+			mw = hr * 0.24
+		"Long":
+			mc = hc + Vector2(hr * 1.22, hr * 0.4).rotated(tilt)
+			mw = hr * 0.26
+	if snout != "Flat":
+		draw_circle(nose, hr * (0.07 if snout == "Long" else 0.12), INK)
 	match d["mouth"]:
 		"Smile", "Tongue", "Fangs":
 			var open: bool = act_name in ["attack", "hop", "Splash", "Climb"] or d["mood"] == "Goofy"

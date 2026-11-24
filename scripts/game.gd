@@ -15,8 +15,9 @@ const Monster = preload("res://scripts/monster.gd")
 const View = preload("res://scripts/monster_view.gd")
 const Fight = preload("res://scripts/fight.gd")
 
-## The strip of tabs under the monster, in order. "shape" is the four sliders.
-const FIELDS := ["body", "ears", "eyes", "mouth", "tail", "marks", "top", "back", "color", "accent", "shape", "move", "mood"]
+## The strip of tabs under the monster, in order. "shape" is the four sliders. MOVE sits second
+## because it is the one choice a fight reads.
+const FIELDS := ["body", "move", "color", "accent", "eyes", "ears", "snout", "mouth", "tail", "top", "back", "marks", "shape", "mood"]
 const EXAMPLES := ["a fat blue cat with horns", "grumpy red dragon named Gus", "tiny shy pink bunny with spots",
 	"long green lizard, one eye, no tail", "goofy yellow duck", "black wolf with white stripes"]
 
@@ -97,6 +98,7 @@ func _build() -> void:
 	view = View.new()
 	view.design = design
 	view.animate = not _settings.get_value("low_graphics")
+	view.fit = 1.25
 	view.anchor_right = 1.0
 	view.offset_top = 104
 	view.offset_bottom = 430
@@ -131,7 +133,7 @@ func _build() -> void:
 	add_child(name_btn)
 
 	# status line + UNDO
-	status = UI.label("", 18, UI.DIM)
+	status = UI.label("", 20)
 	status.anchor_right = 1.0
 	status.offset_left = 20
 	status.offset_right = -150
@@ -139,7 +141,6 @@ func _build() -> void:
 	status.offset_bottom = 504
 	status.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	status.clip_text = true
 	add_child(status)
 	undo_btn = UI.button("UNDO", undo)
 	undo_btn.anchor_left = 1.0
@@ -232,6 +233,8 @@ func pick_field(f: String) -> void:
 	field = f
 	for b in strip.get_children():
 		b.set_pressed_no_signal(b.get_meta("field") == f)
+		if b.get_meta("field") == f:      # keep the picked tab on screen (after a rebuild too)
+			(strip.get_parent() as ScrollContainer).ensure_control_visible.call_deferred(b)
 	for c in options.get_children():
 		options.remove_child(c)
 		c.queue_free()
@@ -251,7 +254,8 @@ func pick_field(f: String) -> void:
 			s.value = design[k]
 			s.custom_minimum_size = Vector2(0, UI.MIN_TOUCH)
 			s.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			s.value_changed.connect(func(v: float): set_part(k, v))
+			s.value_changed.connect(func(v: float): set_part(k, v, false))   # redraw while dragging...
+			s.drag_ended.connect(func(_changed: bool): checkpoint())          # ...save once on release
 			row.add_child(s)
 			options.add_child(row)
 		return
@@ -291,7 +295,7 @@ func _swatch(b: Button, c: Color) -> void:
 # ---------------------------------------------------------------- changing the monster
 
 ## One part or slider changes. Every change is saved straight away.
-func set_part(key: String, value: Variant) -> void:
+func set_part(key: String, value: Variant, save_now: bool = true) -> void:
 	var next := design.duplicate()
 	next[key] = value
 	design = Monster.clean(next)
@@ -307,7 +311,8 @@ func set_part(key: String, value: Variant) -> void:
 					b.set_pressed_no_signal(b.get_meta("option") == design[key])
 	if key == "move":
 		view.act(design["move"])
-	checkpoint()
+	if save_now:
+		checkpoint()
 
 
 func _replace(next: Dictionary, note: String) -> void:
