@@ -44,7 +44,7 @@ func _run() -> void:
 	await _wait_scene("Intro")
 	var intro_ms := Time.get_ticks_msec()
 	await _frames(10)
-	_shot("intro")
+	await _shot("intro")
 	var skip_ms := Time.get_ticks_msec()
 	await _click("SKIP")
 	await _wait_scene("Title")
@@ -63,7 +63,7 @@ func _run() -> void:
 	_check(picked >= 0 and Q.last_ms > 0.0 and low_ok and high_ok,
 		"TIER PASS (first launch picked %s, test frame %.1f ms; LOW and HIGH apply)" % [Q.NAMES[maxi(picked, 0)], Q.last_ms])
 	await _frames(10)
-	_shot("title")
+	await _shot("title")
 	_check(_find("CONTINUE") == null, "TITLE PASS (no save yet)")
 	await _click("SETTINGS")
 	await _click("CREDITS")
@@ -80,7 +80,7 @@ func _run() -> void:
 	const Monster = preload("res://scripts/monster.gd")
 	var save: Node = get_node("/root/Save")
 	await _frames(10)
-	_shot("creator")
+	await _shot("creator")
 	_check(save.exists() and Monster.clean(game.design) == game.design and game.design == Monster.clean(save.read().get("monster")),
 		"HATCH PASS (new game hatched %s and saved it)" % game.design["name"])
 	# Tap parts: a tab in the strip, then a choice.
@@ -99,16 +99,16 @@ func _run() -> void:
 	var chub: HSlider = game.find_child("Slider_chub", true, false)
 	chub.value = 1.0
 	await _frames(3)
-	_shot("creator_shape")
+	await _shot("creator_shape")
 	_check(is_equal_approx(game.design["chub"], 1.0), "SHAPE PASS (chub slider at 100%)")
 	# Describe it: typed words become a draft; the words it got are shown.
 	await _click("DESCRIBE")
 	await _frames(5)
-	_shot("describe")
+	await _shot("describe")
 	(game.find_child("DescribeText", true, false) as LineEdit).text = "a skinny blue cat with horns and zorp, named Gus"
 	await _click("MAKE A NEW ONE")
 	await _frames(10)
-	_shot("described")
+	await _shot("described")
 	var g: Dictionary = game.design
 	_check(g["name"] == "Gus" and g["color"] == "Lake" and g["ears"] == "Pointy" and g["top"] == "Horns"
 		and g["chub"] < 0.2 and g["back"] == "None" and "zorp" in game.last_missed and "Missed: zorp" in game.status.text,
@@ -125,17 +125,39 @@ func _run() -> void:
 	# Surprise rolls a new one; UNDO brings Gus back.
 	await _click("SURPRISE")
 	await _frames(10)
-	_shot("surprise")
+	await _shot("surprise")
 	var rolled: bool = game.design != g
 	await _click("UNDO")
 	await _frames(5)
 	_check(rolled and game.design == g, "UNDO PASS (surprise rolled a new monster, undo restored Gus)")
+	# Rename.
+	await _click("GUS")
+	await _frames(5)
+	(game.find_child("NameText", true, false) as LineEdit).text = "Gusto"
+	await _click("SAVE NAME")
+	await _frames(5)
+	_check(game.design["name"] == "Gusto" and _find("GUSTO") != null, "RENAME PASS (Gus is now Gusto)")
+	# CHANGE THIS ONE: words change only what they mention.
+	await _click("DESCRIBE")
+	await _frames(5)
+	(game.find_child("DescribeText", true, false) as LineEdit).text = "purple with wings"
+	await _click("CHANGE THIS ONE")
+	await _frames(10)
+	var c: Dictionary = game.design
+	_check(c["color"] == "Plum" and c["back"] == "Wings" and c["name"] == "Gusto" and c["ears"] == "Pointy" and c["top"] == "Horns",
+		"CHANGE PASS (added purple and wings; name, ears and horns untouched)")
+	# The move is the one choice a fight reads: pick Climb from the MOVE tab.
+	await _click("MOVE")
+	await _click("CLIMB")
+	await _frames(5)
+	_check(game.design["move"] == "Climb", "MOVE PASS (picked Climb)")
+	g = game.design.duplicate()
 	var bat: Node = get_node("/root/Battery")
 	var playing_full: bool = bat.state == "play" and Engine.max_fps == 60
 
 	# Every change is saved the moment it is made.
 	var saved: Dictionary = save.read()
-	_check(Monster.clean(saved.get("monster")) == g, "AUTOSAVE PASS (Gus saved without a save button)")
+	_check(Monster.clean(saved.get("monster")) == g, "AUTOSAVE PASS (Gusto saved without a save button)")
 
 	# Phone interruption: the app loses focus -> pause + save.
 	get_tree().root.propagate_notification(NOTIFICATION_APPLICATION_FOCUS_OUT)
@@ -147,18 +169,18 @@ func _run() -> void:
 	_check(playing_full and bg_low and bat.state == "saver" and Engine.max_fps == 30,
 		"BATTERY PASS (play 60 fps, background 5 fps, paused 30 fps)")
 	bat.idle_secs = INF                         # the bot plays without input events: don't treat it as idle
-	_shot("pause")
+	await _shot("pause")
 
 	# Settings from the pause menu: bigger text, colorblind, left-handed.
 	await _click("SETTINGS")
 	await _frames(10)
-	_shot("settings")
+	await _shot("settings")
 	await _click("TEXT SIZE")
 	await _frames(5)
 	await _click("COLORBLIND")
 	await _click("LEFT-HANDED")
 	await _frames(10)
-	_shot("settings_changed")
+	await _shot("settings_changed")
 	var s: Node = get_node("/root/Settings")
 	_check(s.get_value("colorblind") and s.get_value("left_handed") and int(s.get_value("text_size")) == 2,
 		"SETTINGS PASS (saved)")
@@ -169,13 +191,13 @@ func _run() -> void:
 	await _click("QUIT TO TITLE")
 	await _wait_scene("Title")
 	await _frames(10)
-	_shot("title_continue")
+	await _shot("title_continue")
 	await _click("CONTINUE")
 	await _wait_scene("Game")
 	game = get_tree().current_scene
 	_check(game.design == g, "RESUME PASS (CONTINUE brought %s back, part for part)" % game.design["name"])
 	await _frames(10)
-	_shot("game_lefthanded")
+	await _shot("game_lefthanded")
 
 	# Android back = pause, back again = resume.
 	get_tree().root.propagate_notification(NOTIFICATION_WM_GO_BACK_REQUEST)
@@ -184,12 +206,47 @@ func _run() -> void:
 	await _click("RESUME")
 	await _frames(5)
 
+	# A phone call while DESCRIBE is open must not leave the game stuck paused.
+	await _click("DESCRIBE")
+	await _frames(5)
+	get_tree().root.propagate_notification(NOTIFICATION_APPLICATION_FOCUS_OUT)
+	await _frames(10)
+	get_tree().root.propagate_notification(NOTIFICATION_APPLICATION_FOCUS_IN)
+	var was_paused: bool = game.paused
+	get_tree().root.propagate_notification(NOTIFICATION_WM_GO_BACK_REQUEST)
+	await _frames(5)
+	var unpaused: bool = not game.paused and game.find_child("DescribeText", true, false) != null
+	get_tree().root.propagate_notification(NOTIFICATION_WM_GO_BACK_REQUEST)
+	await _frames(5)
+	var closed: bool = game.find_child("DescribeText", true, false) == null
+	await _click("SURPRISE")
+	await _frames(5)
+	var alive: bool = game.design != g
+	await _click("UNDO")
+	await _frames(5)
+	_check(was_paused and unpaused and closed and alive and game.design == g,
+		"UNSTUCK PASS (call during DESCRIBE: back un-pauses, back closes the sheet, buttons still work)")
+
 	# Test fight, played well: Attack on the wind-up, the signature move (or Guard) on the strike.
 	await _click("FIGHT")
 	await _frames(15)
-	_shot("fight")
+	await _shot("fight")
 	var fight: Control = game.fight
 	var turns := 0
+	# A call mid-fight pauses it; back resumes; the fight carries on.
+	await _click("ATTACK")
+	await _frames(3)
+	turns += 1
+	get_tree().root.propagate_notification(NOTIFICATION_APPLICATION_FOCUS_OUT)
+	await _frames(10)
+	get_tree().root.propagate_notification(NOTIFICATION_APPLICATION_FOCUS_IN)
+	var hp_before: int = fight.duel.enemy_hp
+	fight.play("Attack")
+	var frozen: bool = game.paused and fight.duel.enemy_hp == hp_before
+	get_tree().root.propagate_notification(NOTIFICATION_WM_GO_BACK_REQUEST)
+	await _frames(5)
+	_check(frozen and not game.paused and is_instance_valid(game.fight),
+		"FIGHT INTERRUPT PASS (call mid-fight pauses, turns are blocked, back resumes)")
 	while not fight.duel.over() and turns < 60:
 		if fight.duel.charging:
 			await _click_node(fight.b_move if fight.duel.can("Move") else fight.b_guard)
@@ -198,7 +255,7 @@ func _run() -> void:
 		await _frames(3)
 		turns += 1
 	await _frames(10)
-	_shot("fight_won")
+	await _shot("fight_won")
 	_check(fight.duel.won() and game.wins == 1 and int(save.read().get("wins", 0)) == 1 and _find("FIGHT ANOTHER") != null,
 		"FIGHT PASS (won in %d turns with %d HP left; win saved)" % [turns, fight.duel.player_hp])
 	# Played badly (Attack only) the strike wins: the fight is not a formality.
@@ -210,7 +267,7 @@ func _run() -> void:
 		await _frames(3)
 		turns += 1
 	await _frames(10)
-	_shot("fight_fainted")
+	await _shot("fight_fainted")
 	_check(not fight.duel.won() and _find("TRY AGAIN") != null and game.wins == 1 and Monster.clean(save.read().get("monster")) == g,
 		"FAINT PASS (attack-only lost in %d turns; monster and win count kept)" % turns)
 	# Android back on the result screen = back to the creator.
@@ -221,18 +278,18 @@ func _run() -> void:
 	await _click("QUIT TO TITLE")
 	await _wait_scene("Title")
 	await _frames(5)
-	_check(_find("CONTINUE  (GUS)") != null, "FLOW PASS (back at title, CONTINUE shows Gus)")
+	_check(_find("CONTINUE  (GUSTO)") != null, "FLOW PASS (back at title, CONTINUE shows Gusto)")
 	# NEW MONSTER with a save asks first, so a mis-tap can't wipe a monster.
 	await _click("NEW MONSTER")
 	await _frames(5)
-	_check(_find("YES, START OVER") != null and save.exists(), "KEEP PASS (NEW MONSTER asks before replacing Gus)")
+	_check(_find("YES, START OVER") != null and save.exists(), "KEEP PASS (NEW MONSTER asks before replacing Gusto)")
 	await _click("KEEP GUS")
 	await _frames(5)
 
 	# Bug report sheet carries the build line.
 	await _click("REPORT A BUG")
 	await _frames(10)
-	_shot("bug_report")
+	await _shot("bug_report")
 	var txt: String = preload("res://scripts/bug_report.gd").report_text("test", get_tree())
 	_check("build:" in txt and "device:" in txt, "BUGREPORT PASS")
 	await _click("CLOSE")
@@ -242,7 +299,7 @@ func _run() -> void:
 		await _click_node(get_tree().current_scene.find_child("Version", true, false))
 	await _frames(10)
 	_check(_find("GOD MODE") != null, "DEBUG PASS (dev menu opens)")
-	_shot("debug_menu")
+	await _shot("debug_menu")
 
 	# 3D character standard (docs/MOVEMENT_3D.md): full range of movement, every system proven.
 	await _click("3D CHARACTER TEST")
@@ -321,7 +378,7 @@ func _movement_checks(ct: Node) -> void:
 		foot_travel += f.distance_to(last_foot)
 		last_foot = f
 		if absf(ang - PI) < 0.03:
-			_shot("char_run")
+			await _shot("char_run")
 	ct.bot_stick = Vector2.ZERO
 	_check(hero.turned > 5.6 and top_speed > 4.0,
 		"MOVE360 PASS (turned %.1f rad, top speed %.1f m/s)" % [hero.turned, top_speed])
@@ -345,7 +402,7 @@ func _movement_checks(ct: Node) -> void:
 		_check(absf(gl - gr) < 0.04 and gl < 0.16 and gr < 0.16,
 			"FOOTIK %s PASS (feet %.2f / %.2f m over the ground)" % [spot[0], gl, gr])
 		if spot[0] == "STAIRS":
-			_shot("char_stairs")
+			await _shot("char_stairs")
 	# Jump: take-off, fall, land.
 	_place(hero, Vector3(0, 0.05, 0), 0.0)
 	await _physics(10)
@@ -357,7 +414,7 @@ func _movement_checks(ct: Node) -> void:
 		peak = maxf(peak, hero.global_position.y)
 		phases[hero.air_phase] = true
 		if i == 20:
-			_shot("char_jump")
+			await _shot("char_jump")
 	_check(peak > 0.6 and phases.has("start") and phases.has("fall") and phases.has("land") and hero.mode == "ground",
 		"JUMP PASS (peak %.2f m, start/fall/land)" % peak)
 	# Crouch walk.
@@ -365,7 +422,7 @@ func _movement_checks(ct: Node) -> void:
 	ct.bot_stick = Vector2(1, 0)
 	await _physics(30)
 	_check(hero.mode == "crouch" and hero.speed() < 2.0 and hero._cap.height < 1.3, "CROUCH PASS (speed %.1f)" % hero.speed())
-	_shot("char_crouch")
+	await _shot("char_crouch")
 	ct.bot_stick = Vector2.ZERO
 	ct.toggle_crouch()
 	# Aim: turn in place, strafe (chest on target, legs sideways), backpedal, head looks at it.
@@ -382,7 +439,7 @@ func _movement_checks(ct: Node) -> void:
 	ct.bot_stick = Vector2(1, 0)
 	await _physics(25)
 	_check(absf(hero.twist.yaw) > 0.5 and hero.speed() > 3.0, "STRAFE PASS (chest twisted %.0f deg)" % rad_to_deg(hero.twist.yaw))
-	_shot("char_strafe")
+	await _shot("char_strafe")
 	_place(hero, Vector3(0, 0.05, 1), PI)
 	ct.bot_stick = Vector2(0, 1)
 	await _physics(25)
@@ -396,7 +453,7 @@ func _movement_checks(ct: Node) -> void:
 	await _click("PUNCH")
 	await _physics(4)
 	_check(hero.is_acting("punch") and dummy.is_acting("hit_chest"), "ACTION PASS (punch lands, dummy flinches)")
-	_shot("char_punch")
+	await _shot("char_punch")
 	await _physics(20)
 	ct.punch()
 	await _physics(25)
@@ -414,7 +471,7 @@ func _movement_checks(ct: Node) -> void:
 	await _physics(10)
 	await _click("JUMP")
 	await _physics(12)
-	_shot("char_climb")
+	await _shot("char_climb")
 	await _physics(60)
 	_check(hero.global_position.y > 0.9 and hero.mode == "ground", "CLIMB PASS (on the ledge at %.2f m)" % hero.global_position.y)
 	_place(hero, Vector3(9.25, 0.05, 0.9), 0.0)
@@ -425,7 +482,7 @@ func _movement_checks(ct: Node) -> void:
 	_place(hero, Vector3(-6.5, 0.5, -7.5), 0.0)
 	await _physics(90)
 	_check(hero.mode == "swim", "SWIM PASS")
-	_shot("char_swim")
+	await _shot("char_swim")
 	_place(hero, Vector3(-6.5, -1.6, -5.8), 0.0)
 	await _physics(5)
 	await _click("JUMP")
@@ -439,7 +496,7 @@ func _movement_checks(ct: Node) -> void:
 	await _physics(150)
 	var pel: Vector3 = await _bone(dummy, "pelvis")
 	_check(dummy.is_ragdoll() and pel.y < 0.4, "RAGDOLL PASS (pelvis down to %.2f m)" % pel.y)
-	_shot("char_ragdoll")
+	await _shot("char_ragdoll")
 	var inked := true
 	for m in hero.model.find_children("*", "MeshInstance3D", true, false):
 		for i in (m as MeshInstance3D).mesh.get_surface_count():
@@ -502,7 +559,7 @@ func _standards_checks(ct: Node, coach_was: bool) -> void:
 	var see: Dictionary = get_tree().current_scene.get_world_3d().direct_space_state.intersect_ray(
 		PhysicsRayQueryParameters3D.create(cam.global_position, hero.global_position + Vector3(0, 1.2, 0), 1, [hero.get_rid()]))
 	_check(ct.rig.blocked and see.is_empty(), "CAMERA WALL PASS (camera came in front of the wall)")
-	_shot("std_camera_wall")
+	await _shot("std_camera_wall")
 	_place(hero, Vector3(0, 0.05, 4), PI)
 	dummy.global_position = Vector3(0, 0, -5)
 	ct.toggle_aim()
@@ -512,7 +569,7 @@ func _standards_checks(ct: Node, coach_was: bool) -> void:
 		and vp.has_point(cam.unproject_position(dummy.global_position + Vector3(0, 1, 0))) \
 		and not cam.is_position_behind(dummy.global_position)
 	_check(both, "CAMERA FRAME PASS (hero and target both on screen)")
-	_shot("std_camera_frame")
+	await _shot("std_camera_frame")
 	# 6. Music shifts to the combat layer when fighting.
 	_check(audio.intensity > 0.9, "MUSIC PASS (combat layer at %d%%)" % int(audio.intensity * 100))
 	ct.toggle_aim()
@@ -621,7 +678,7 @@ func _standards_checks(ct: Node, coach_was: bool) -> void:
 	await _frames(3)
 	var shown := lg.visible
 	await _frames(2)
-	_shot("legend")
+	await _shot("legend")
 	var kt := InputEventKey.new()
 	kt.physical_keycode = KEY_T
 	controls.rebind("jump", kt)
@@ -644,7 +701,7 @@ func _standards_checks(ct: Node, coach_was: bool) -> void:
 	await _frames(3)
 	await RenderingServer.frame_post_draw
 	var c2: float = _contrast(get_viewport().get_texture().get_image(), cam, hero)
-	_shot("std_dark")
+	await _shot("std_dark")
 	ct.sun.light_energy = 1.2
 	_check(c1 >= 2.0 and c2 >= 2.0, "READ PASS (hero vs floor contrast %.1f lit, %.1f dark)" % [c1, c2])
 	# 3. Frame budget: draw calls, triangles, code time with 6 characters running.
@@ -732,7 +789,7 @@ func _tune_checks(ct: Node) -> void:
 	if sl != null:
 		sl.value = was + 1.5
 	await _frames(3)
-	_shot("tune_panel")
+	await _shot("tune_panel")
 	var moved: bool = sl != null and absf(ct.hero.max_speed - (was + 1.5)) < 0.02
 	var kept: bool = Tune.saved("character3d", "max_speed") != null
 	var all_kinds: bool = cam_sl != null and feel_sl != null

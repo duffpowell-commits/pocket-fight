@@ -53,7 +53,8 @@ func _ready() -> void:
 		design = Monster.surprise(rng)      # a new game hatches something, never a blank
 	else:
 		design = Monster.clean(d.get("monster", {}))
-		wins = int(d.get("wins", 0))
+		var w: Variant = d.get("wins", 0)
+		wins = int(w) if typeof(w) in [TYPE_INT, TYPE_FLOAT] else 0
 	_build()
 	checkpoint()
 	get_node("/root/Audio").music("music_loop")
@@ -294,7 +295,10 @@ func set_part(key: String, value: Variant) -> void:
 	var next := design.duplicate()
 	next[key] = value
 	design = Monster.clean(next)
-	status.text = "%s: %s" % [Monster.TITLES.get(key, key.to_upper()), str(value) if typeof(value) == TYPE_STRING else "%d%%" % int(round(float(value) * 100.0))]
+	var now: Variant = design[key]          # what it really became (clean() may have adjusted it)
+	status.text = "%s: %s" % [Monster.TITLES.get(key, key.to_upper()), str(now) if typeof(now) == TYPE_STRING else "%d%%" % int(round(float(now) * 100.0))]
+	if key in ["color", "accent"] and next["accent"] != design["accent"]:
+		status.text = "2ND COLOR moved to %s so markings still show." % design["accent"]
 	_refresh()
 	if key in Monster.PARTS and field == key:
 		for row in options.get_children():
@@ -348,7 +352,7 @@ func describe(text: String, fresh: bool) -> bool:
 	var d: Dictionary = r["design"]
 	if fresh and not ("named" in text.to_lower() or "called" in text.to_lower()):
 		d["name"] = Monster.NAMES[rng.randi() % Monster.NAMES.size()]
-	var note := "Got: " + ", ".join(last_heard)
+	var note := ("Got: " + ", ".join(last_heard)) if not last_heard.is_empty() else "Named %s" % d["name"]
 	if not last_missed.is_empty():
 		note += ".  Missed: " + ", ".join(last_missed)
 	_replace(d, note)
@@ -453,7 +457,8 @@ func pause() -> void:
 
 
 func resume() -> void:
-	UI.close_sheet(sheet_box)
+	if is_instance_valid(sheet_box):
+		UI.close_sheet(sheet_box)
 	sheet_box = null
 	paused = false
 
@@ -475,10 +480,11 @@ func _notification(what: int) -> void:
 
 func _go_back() -> void:
 	var sheets := get_tree().get_nodes_in_group("sheet")
-	if not paused and is_instance_valid(fight) and fight.ended():
+	var pause_sheet: Variant = sheet_box.get_meta("sheet") if is_instance_valid(sheet_box) else null
+	if paused and (sheets.is_empty() or sheets[-1] == pause_sheet or pause_sheet == null):
+		resume()                            # the pause sheet is on top (or lost): un-pause, never just free it
+	elif not paused and is_instance_valid(fight) and fight.ended():
 		fight.leave()                       # back on the win / faint screen = back to the creator
-	elif paused and sheets.size() <= 1:
-		resume()
 	elif sheets.size() > 0:
 		sheets[-1].queue_free()
 	else:

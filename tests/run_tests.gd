@@ -367,6 +367,18 @@ func test_monster_surprise_is_valid_and_varied() -> void:
 	check(seen.size() >= 55, "surprises differ (%d of 60 unique)" % seen.size())
 
 
+## A monster comes back from the save file (JSON) exactly as it went in, sliders included.
+func test_monster_survives_the_save_file() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 3
+	var lost := 0
+	for i in 300:
+		var d: Dictionary = Monster.surprise(rng)
+		if Monster.clean(JSON.parse_string(JSON.stringify(d))) != d:
+			lost += 1
+	check(lost == 0, "%d of 300 monsters changed on a save round trip" % lost)
+
+
 ## Describe it: typed words become parts; unknown words are reported, not guessed.
 func test_monster_from_text() -> void:
 	var r: Dictionary = Monster.from_text("A fat blue cat with horns, no tail and white spots named Gus!")

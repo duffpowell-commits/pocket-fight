@@ -61,7 +61,7 @@ static func clean(src: Variant) -> Dictionary:
 	for k in SHAPE:
 		var v: Variant = src.get(k)
 		if typeof(v) in [TYPE_FLOAT, TYPE_INT]:
-			d[k] = clampf(float(v), 0.0, 1.0)
+			d[k] = snappedf(clampf(float(v), 0.0, 1.0), 0.05)   # one grid, so a save round trip is exact
 	d["name"] = clean_name(src.get("name", d["name"]))
 	if d["accent"] == d["color"]:      # markings in the body colour would be invisible
 		d["accent"] = "Coal" if d["color"] == "Snow" else "Snow"

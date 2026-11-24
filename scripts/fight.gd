@@ -68,6 +68,9 @@ func _build() -> void:
 	_place(them, 0.34, 1.0, 100, 360)
 	me = View.new()
 	_place(me, 0.0, 0.66, 300, 600)
+	var still: bool = get_node("/root/Settings").get_value("low_graphics")
+	me.animate = not still
+	them.animate = not still
 	hp_them = UI.label("", 22)
 	_place(hp_them, 0.0, 0.5, 120, 190)
 	hp_me = UI.label("", 22)
@@ -198,6 +201,7 @@ func ended() -> bool:
 
 func leave() -> void:
 	UI.close_sheet(end_box)
+	get_node("/root/Subs").clear()
 	closed.emit(won_any)
 	queue_free()
 
