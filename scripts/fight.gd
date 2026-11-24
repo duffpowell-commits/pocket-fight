@@ -30,6 +30,8 @@ var me: View
 var them: View
 var hp_me: Label
 var hp_them: Label
+var bar_me: ProgressBar
+var bar_them: ProgressBar
 var intent: Label
 var log_line: Label
 var b_attack: Button
@@ -71,19 +73,25 @@ func _build() -> void:
 	var still: bool = get_node("/root/Settings").get_value("low_graphics")
 	me.animate = not still
 	them.animate = not still
-	hp_them = UI.label("", 22)
-	_place(hp_them, 0.0, 0.5, 120, 190)
-	hp_me = UI.label("", 22)
-	_place(hp_me, 0.5, 1.0, 470, 540)
-	intent = UI.label("", 26, UI.key("warn"))
-	_place(intent, 0.0, 1.0, 30, 100)
-	intent.offset_left = 180
-	intent.offset_right = -180
-	intent.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	log_line = UI.label("", 20)
-	_place(log_line, 0.04, 0.96, 606, 690)
-	log_line.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	var left: bool = get_node("/root/Settings").get_value("left_handed")
+	hp_them = UI.label("", 22)
+	_place(hp_them, 0.03, 0.47, 118, 150)
+	bar_them = _hp_bar(0.03, 0.47, 154)
+	hp_me = UI.label("", 22)
+	_place(hp_me, 0.53, 0.97, 452, 484)
+	bar_me = _hp_bar(0.53, 0.97, 488)
+	# what just happened: small, up top beside PAUSE
+	log_line = UI.label("", 18, UI.DIM)
+	_place(log_line, 0.0, 1.0, 30, 30 + UI.MIN_TOUCH)
+	log_line.offset_left = 190 if left else 20
+	log_line.offset_right = -20 if left else -190
+	log_line.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	# what is about to happen: big, right above the thumb buttons
+	intent = UI.label("", 30, UI.key("warn"))
+	intent.anchor_top = 1.0
+	intent.anchor_bottom = 1.0
+	_place(intent, 0.0, 1.0, -330, -272)
+	intent.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	var pause_b := UI.button("PAUSE", func(): get_parent().pause())
 	pause_b.anchor_left = 0.0 if left else 1.0
 	pause_b.anchor_right = pause_b.anchor_left
@@ -106,6 +114,25 @@ func _build() -> void:
 	b_move = UI.button("", func(): play("Move"))
 	for b in [b_attack, b_guard, b_move]:
 		col.add_child(b)
+
+
+## A real HP bar. The number stays in the label above it, so the bar is never the only cue.
+func _hp_bar(l: float, r: float, top: int) -> ProgressBar:
+	var b := ProgressBar.new()
+	b.show_percentage = false
+	b.min_value = 0.0
+	var back := StyleBoxFlat.new()
+	back.bg_color = Color("1b2028")
+	back.set_corner_radius_all(7)
+	back.set_border_width_all(2)
+	back.border_color = Color("3a4760")
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = UI.key("good")
+	fill.set_corner_radius_all(7)
+	b.add_theme_stylebox_override("background", back)
+	b.add_theme_stylebox_override("fill", fill)
+	_place(b, l, r, top, top + 18)
+	return b
 
 
 func _place(c: Control, l: float, r: float, top: int, bottom: int) -> void:
@@ -175,6 +202,7 @@ func play(action: String) -> void:
 func _finish() -> void:
 	var won := duel.won()
 	var audio: Node = get_node("/root/Audio")
+	get_node("/root/Subs").clear()          # no stale "[heavy strike lands]" over the result
 	if won:
 		won_any = true
 		them.act("faint")
@@ -215,15 +243,20 @@ func debug_win() -> void:
 
 
 func refresh() -> void:
-	hp_me.text = "%s\nHP %s %d/%d" % [design["name"], _bar(duel.player_hp), duel.player_hp, duel.max_hp]
-	hp_them.text = "Wild %s\nHP %s %d/%d" % [foe["name"], _bar(duel.enemy_hp), duel.enemy_hp, duel.max_hp]
+	hp_me.text = "%s  %d/%d" % [design["name"], duel.player_hp, duel.max_hp]
+	hp_them.text = "Wild %s  %d/%d" % [foe["name"], duel.enemy_hp, duel.max_hp]
+	for pair in [[bar_me, duel.player_hp], [bar_them, duel.enemy_hp]]:
+		pair[0].max_value = duel.max_hp
+		pair[0].value = pair[1]
+		var low: bool = pair[1] * 3 <= duel.max_hp
+		(pair[0].get_theme_stylebox("fill") as StyleBoxFlat).bg_color = UI.key("bad") if low else UI.key("good")
 	if duel.over():
 		intent.text = ""
 	elif duel.charging:
 		intent.text = "!! STRIKE COMING !!"      # words + marks, not only colour
 		intent.add_theme_color_override("font_color", UI.key("bad"))
 	else:
-		intent.text = "It is winding up"
+		intent.text = "It winds up..."
 		intent.add_theme_color_override("font_color", UI.key("warn"))
 	b_attack.text = "ATTACK  (%d)" % duel.attack_damage()
 	b_guard.text = "GUARD  (halve a strike)"
@@ -236,11 +269,6 @@ func refresh() -> void:
 	b_attack.disabled = not duel.can("Attack")
 	b_guard.disabled = not duel.can("Guard")
 	b_move.disabled = not duel.can("Move")
-
-
-func _bar(hp: int) -> String:
-	var n := int(ceil(10.0 * hp / maxf(1.0, duel.max_hp)))
-	return "#".repeat(n) + "-".repeat(10 - n)
 
 
 func bug_state() -> String:

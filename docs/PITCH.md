@@ -42,8 +42,8 @@ Hit one: say so, then pivot a pillar, shrink, or park.
 | Thing | Slice now | v1 |
 |---|---|---|
 | Bodies | 4 | 6 |
-| Pick-one part slots | 8 (36 choices) | 10 |
+| Pick-one part slots | 9 (40 choices) | 10 |
 | Colours | 10 | 12 |
-| Words understood | about 200 | 400 |
+| Words understood | about 220 | 400 |
 | Moves | 2 | 4 |
 | Fights | 1 kind | 3 kinds |

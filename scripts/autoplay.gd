@@ -146,6 +146,12 @@ func _run() -> void:
 	var c: Dictionary = game.design
 	_check(c["color"] == "Plum" and c["back"] == "Wings" and c["name"] == "Gusto" and c["ears"] == "Pointy" and c["top"] == "Horns",
 		"CHANGE PASS (added purple and wings; name, ears and horns untouched)")
+	# A face part: the SNOUT tab.
+	await _click("SNOUT")
+	await _click("LONG")
+	await _frames(5)
+	await _shot("creator_snout")
+	_check(game.design["snout"] == "Long", "SNOUT PASS (picked a long snout)")
 	# The move is the one choice a fight reads: pick Climb from the MOVE tab.
 	await _click("MOVE")
 	await _click("CLIMB")
@@ -256,6 +262,9 @@ func _run() -> void:
 		turns += 1
 	await _frames(10)
 	await _shot("fight_won")
+	_check(fight.bar_me.value == fight.duel.player_hp and fight.bar_them.value == fight.duel.enemy_hp
+		and fight.bar_me.max_value == fight.duel.max_hp and fight.duel.player_hp < fight.duel.max_hp,
+		"HP BAR PASS (bars match the numbers: %d and %d of %d)" % [fight.duel.player_hp, fight.duel.enemy_hp, fight.duel.max_hp])
 	_check(fight.duel.won() and game.wins == 1 and int(save.read().get("wins", 0)) == 1 and _find("FIGHT ANOTHER") != null,
 		"FIGHT PASS (won in %d turns with %d HP left; win saved)" % [turns, fight.duel.player_hp])
 	# Played badly (Attack only) the strike wins: the fight is not a formality.
@@ -270,10 +279,30 @@ func _run() -> void:
 	await _shot("fight_fainted")
 	_check(not fight.duel.won() and _find("TRY AGAIN") != null and game.wins == 1 and Monster.clean(save.read().get("monster")) == g,
 		"FAINT PASS (attack-only lost in %d turns; monster and win count kept)" % turns)
-	# Android back on the result screen = back to the creator.
+	# A call on the result screen: back un-pauses (result stays), back again leaves for the creator.
+	get_tree().root.propagate_notification(NOTIFICATION_APPLICATION_FOCUS_OUT)
+	await _frames(10)
+	get_tree().root.propagate_notification(NOTIFICATION_APPLICATION_FOCUS_IN)
+	var res_paused: bool = game.paused
 	get_tree().root.propagate_notification(NOTIFICATION_WM_GO_BACK_REQUEST)
 	await _frames(10)
-	_check(not is_instance_valid(game.fight) and not game.paused, "FIGHT BACK PASS (back leaves the result screen for the creator)")
+	var res_kept: bool = not game.paused and is_instance_valid(game.fight) and _find("TRY AGAIN") != null and _find("RESUME") == null
+	get_tree().root.propagate_notification(NOTIFICATION_WM_GO_BACK_REQUEST)
+	await _frames(10)
+	_check(res_paused and res_kept and not is_instance_valid(game.fight) and not game.paused,
+		"FIGHT BACK PASS (call on the result screen: back un-pauses, back again returns to the creator)")
+	# Back during a live fight pauses it; back again resumes it.
+	await _click("FIGHT")
+	await _frames(10)
+	get_tree().root.propagate_notification(NOTIFICATION_WM_GO_BACK_REQUEST)
+	await _frames(10)
+	var live_paused: bool = game.paused and _find("RESUME") != null
+	get_tree().root.propagate_notification(NOTIFICATION_WM_GO_BACK_REQUEST)
+	await _frames(10)
+	_check(live_paused and not game.paused and _find("RESUME") == null and is_instance_valid(game.fight) and not game.fight.duel.over(),
+		"FIGHT PAUSE PASS (back mid-fight pauses, back again resumes, pause sheet gone)")
+	game.fight.leave()
+	await _frames(10)
 	await _click("PAUSE")
 	await _click("QUIT TO TITLE")
 	await _wait_scene("Title")
@@ -283,7 +312,7 @@ func _run() -> void:
 	await _click("NEW MONSTER")
 	await _frames(5)
 	_check(_find("YES, START OVER") != null and save.exists(), "KEEP PASS (NEW MONSTER asks before replacing Gusto)")
-	await _click("KEEP GUS")
+	await _click("KEEP GUSTO")
 	await _frames(5)
 
 	# Bug report sheet carries the build line.

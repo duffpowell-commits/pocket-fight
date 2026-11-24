@@ -1,5 +1,13 @@
 # Decisions (newest first)
 
+## 2026-11-23 (later): polish so the test is fair
+- Duff said "continue" after the slice shipped. Read as: fix what would make the week's test
+  unfair, not new features. QUEUE NEXT is untouched.
+- **SNOUT part added** (Flat, Snout, Muzzle, Long) because the review showed a typed "dragon" and
+  "wolf" came out with the same cat face. Animal words now set it. Old saves load with Flat; no
+  save version bump, since `Monster.clean` fills any missing part.
+- **MOVE is the 2nd tab**, HP is a real bar, the strike warning sits above the buttons.
+
 ## 2026-11-23: restart on the starter, creator first
 - **Duff's calls:** pocket-fight is a side test with a one-week cap (Lethemoor stays active). The
   heart is the creator: making your own monster, by text or photo. Fights show it off.

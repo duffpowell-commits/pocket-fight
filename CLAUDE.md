@@ -11,7 +11,7 @@ it is the handoff between sessions. Commands, standing rules and guards: AGENTS.
 - Pitch + kill rules: docs/PITCH.md. Queue: QUEUE.md (NOW = Duff playtests; build nothing new).
   Progress: tasks/todo.md. Why things changed: docs/DECISIONS.md.
 - Latest build: Releases -> `dev` -> `pocket-fight.apk`, rebuilt on every push to main.
-- Done: M0 foundation (copied from godot-game-starter), M1 creator slice.
+- Done: M0 foundation (copied from godot-game-starter), M1 creator slice, M1.1 test polish (snouts, HP bars, tab order).
 - Next: nothing until the verdict. If it passes, QUEUE NEXT #1 (photo to monster) needs Duff's OK
   on a paid image service first.
 - Waiting on Duff: add the `KEYSTONE_PASS` repo secret (docs/SIGNING.md). Until then CI signs with

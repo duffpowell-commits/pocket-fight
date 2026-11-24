@@ -21,12 +21,15 @@ This repo is a **one-week side test** (verdict Nov 30, 2026). Lethemoor is the a
   DESCRIBE (typed words to a draft, tells you what it missed); SURPRISE + UNDO; autosave;
   test fight against a random wild monster.
 
+- M1.1 test polish (Nov 23, Duff said continue): SNOUT part so a wolf, bear, dragon and cat have
+  different faces; horns no longer hide ears; MOVE is the 2nd tab; bigger monster; real HP bars and
+  the strike warning above the thumb buttons; sliders save on release.
+
 ## IDEAS
 - 2026-11-23: Flooded Mill rescue with two routes (first plan, docs/GAME_DESIGN_PLAN.md).
 - 2026-11-23: player-character creator sharing the same editor.
 - 2026-11-23: evolution choices unlocked by what the duo does together.
 - 2026-11-23: PvP with normalised levels (first plan's balance notes; first mover won 63-69% in its sim).
-- 2026-11-23: horns sit on top of pointy ears; give horns their own spot.
 - 2026-11-23: the build video still shows the starter's 3D test room, not a monster.
 
 ## CUT
