@@ -262,6 +262,9 @@ func _run() -> void:
 		turns += 1
 	await _frames(10)
 	await _shot("fight_won")
+	_check(fight.bar_me.value == fight.duel.player_hp and fight.bar_them.value == fight.duel.enemy_hp
+		and fight.bar_me.max_value == fight.duel.max_hp and fight.duel.player_hp < fight.duel.max_hp,
+		"HP BAR PASS (bars match the numbers: %d and %d of %d)" % [fight.duel.player_hp, fight.duel.enemy_hp, fight.duel.max_hp])
 	_check(fight.duel.won() and game.wins == 1 and int(save.read().get("wins", 0)) == 1 and _find("FIGHT ANOTHER") != null,
 		"FIGHT PASS (won in %d turns with %d HP left; win saved)" % [turns, fight.duel.player_hp])
 	# Played badly (Attack only) the strike wins: the fight is not a formality.

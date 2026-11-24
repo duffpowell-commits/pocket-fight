@@ -202,6 +202,7 @@ func play(action: String) -> void:
 func _finish() -> void:
 	var won := duel.won()
 	var audio: Node = get_node("/root/Audio")
+	get_node("/root/Subs").clear()          # no stale "[heavy strike lands]" over the result
 	if won:
 		won_any = true
 		them.act("faint")

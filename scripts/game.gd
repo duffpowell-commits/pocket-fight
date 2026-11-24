@@ -230,6 +230,8 @@ func _refresh() -> void:
 
 ## Show the choices for one tab.
 func pick_field(f: String) -> void:
+	if field == "shape" and f != "shape":
+		checkpoint()                        # a slider nudged by keys or wheel has no drag-end: save on leaving
 	field = f
 	for b in strip.get_children():
 		b.set_pressed_no_signal(b.get_meta("field") == f)
