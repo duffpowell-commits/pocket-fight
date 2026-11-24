@@ -30,15 +30,18 @@ decide what it grows into.
    This is the game's own signature (studio: Knife & Needle).
 
 ## Roster
-First build, 6 families over 4 plans:
+Starting animals (the myths they grow into are in the Growth table):
 | Family | Plan | Signature part -> move |
 |---|---|---|
 | Fox | Beast | Brush tail -> Feint (dodge, next hit stronger) |
 | Bear | Beast | Heavy paws -> Maul (big hit, slow) |
 | Hawk | Bird | Wings -> Gust (push back, cancel a wind-up) |
 | Snake | Serpent | Coils -> Bind (enemy skips its heavy strike) |
-| Western dragon | Winged | Horns -> Charge; wings -> Gust |
-| Eastern dragon | Serpent | Antlers + mane -> Storm call (hits over two turns) |
+| Lizard | Beast | Tail whip -> Sweep (hits and pushes back) |
+| Stag | Beast | Antlers -> Charge |
+
+Myth forms add a part and its move: Western dragon wings -> Gust and horns -> Charge;
+Eastern dragon antlers + mane -> Storm call (hits over two turns); hydra heads -> a second attack.
 
 Later, in rough order: wolf, big cat, stag, owl, turtle, toad, shark, bat, mantis, octopus;
 wyvern, feathered serpent, sea serpent, hydra, wingless drake; griffin, phoenix, nine-tailed fox,
@@ -53,11 +56,27 @@ All are real animals or old folklore. Names, looks and lore are our own.
 - Starting numbers (from the tested prototype): 30 HP, attack 5, strike 15, guard halves,
   part moves rest 2 turns. Attack-only must lose; reading the tell must win.
 
-## Growth
+## Growth: real animals become myths (Duff's idea, Nov 23)
+- You start with a **real animal** cub. Myths are not picked from a menu: they are earned.
 - A win earns one **ink** mark. You choose where it goes.
 - The game counts how you won: mostly attacks (Fierce), mostly guards (Warden), mostly part moves (Trickster).
-- At 3 wins the cub becomes a rookie; at 8 a champion. The leading style picks the branch,
-  which changes horns, plates, eyes and one move.
+- At 3 wins the cub becomes a rookie (still the animal, bigger and sharper). At 8 wins it becomes
+  a **mythical form**, and the leading style picks which one.
+- Your swaps, palette and ink carry through every stage, so two players' phoenixes never match.
+- Before the change, the game shows a silhouette of where you are heading, so the choice is
+  made by how you play, not by reading a guide.
+
+| Starts as | Fierce | Warden | Trickster |
+|---|---|---|---|
+| Fox | Three-headed hound | Guardian fox spirit | Nine-tailed fox |
+| Snake | Hydra | Eastern dragon | Basilisk |
+| Lizard | Western dragon | Wingless drake | Wyvern |
+| Hawk | Thunderbird | Phoenix | Griffin |
+| Bear | Yeti | Stone golem | (open) |
+| Stag | (open) | Kirin | Jackalope |
+
+First build: **two lines only** (Snake and Lizard, which give the Eastern and Western dragons),
+so 2 cubs + 2 rookies + 6 myths = 10 painted monsters, not 24.
 
 ## World
 - One small 3D zone to walk freely with a thumb stick, monster following you. Painted flat
