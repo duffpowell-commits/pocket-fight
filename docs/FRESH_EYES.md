@@ -17,6 +17,9 @@ every session checks the PR's combined status, not just the check runs.
    - House rules: `ui.gd` helpers for UI, `Subs.cue` for sounds, `UI.key()` + a shape cue for colours,
      focus-out/back-button handling in gameplay scenes, a PASS line in autoplay for new things.
    - Trust the diff, not the claim: tests and autoplay were actually run (CI logs), not just said.
+   - Rule lock (Nov 24): the head commit has a `rule-lock` status. Missing = block (the workflow was
+     deleted or crashed). If it passed on `duff-ok`, the label's events (`issues/<n>/events`) show it
+     was added after the last push, by a tap, with no agent message near it asking for or adding it.
 3. Blocking findings: fix them, push, and review again (new commit = new review).
 4. No blockers: post a PR review (event COMMENT) on the head commit whose body starts with
    `FRESH-EYES REVIEW: PASS <short sha>`, then the non-blocking notes, then the Claude Code footer.

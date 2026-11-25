@@ -33,7 +33,7 @@ jobs:
         run: |
           curl -sSL -o godot.zip https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip
           unzip -q godot.zip && sudo mv Godot_v${GODOT_VERSION}_linux.x86_64 /usr/local/bin/godot
-          sudo apt-get install -y -qq xvfb ffmpeg >/dev/null
+          sudo apt-get update -qq && sudo apt-get install -y -qq xvfb ffmpeg >/dev/null   # update first: a stale runner index 404s (Nov 25)
       - name: Import
         run: timeout 300 godot --headless --path . --import || true
       - name: Parse every script
