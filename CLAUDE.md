@@ -6,6 +6,7 @@ Say what monster you want, watch it hatch, then see what it can do. Owner: Duff.
 it is the handoff between sessions. Commands, standing rules and guards: AGENTS.md (imported above).
 
 ## Where things stand (Nov 23, 2026)
+- **Nov 26: parked; nothing being built. Any AI: start at docs/HANDOFF.md.** Godot 4.7.2 since #6.
 - **One-week side test.** Verdict due Nov 30, 2026. Lethemoor is Duff's active game. Duff picked
   "the creator is the heart" (Nov 23): making the monster is the game, the fight shows it off.
 - Pitch + kill rules: docs/PITCH.md. Queue: QUEUE.md (NOW = Duff playtests; build nothing new).
